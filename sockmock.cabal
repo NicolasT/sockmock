@@ -1,0 +1,22 @@
+Name:                sockmock
+Version:             999
+Synopsis:            A mocking server for socket applications
+-- Description:         
+Homepage:            http://github.com/NicolasT/sockmock
+License:             GPL-2
+License-File:        LICENSE
+Author:              Nicolas Trangez
+Maintainer:          ikke@nicolast.be
+-- Copyright:           
+Category:            Network
+Build-Type:          Simple
+-- Extra-Source-Files:  
+Cabal-Version:       >=1.10
+
+Executable sockmock
+  Main-Is:             Main.hs
+  -- Other-Modules:       
+  -- Other-Extensions:    
+  Build-Depends:       base >=4.7 && <4.8
+  -- Hs-Source-Dirs:      
+  Default-Language:    Haskell2010
