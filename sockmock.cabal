@@ -1,22 +1,44 @@
-Name:                sockmock
-Version:             999
-Synopsis:            A mocking server for socket applications
+Name:                 sockmock
+Version:              999
+Synopsis:             A mocking server for socket applications
 -- Description:         
-Homepage:            http://github.com/NicolasT/sockmock
-License:             GPL-2
-License-File:        LICENSE
-Author:              Nicolas Trangez
-Maintainer:          ikke@nicolast.be
--- Copyright:           
-Category:            Network
-Build-Type:          Simple
--- Extra-Source-Files:  
-Cabal-Version:       >=1.10
+Homepage:             http://github.com/NicolasT/sockmock
 
-Executable sockmock
-  Main-Is:             Main.hs
-  -- Other-Modules:       
-  -- Other-Extensions:    
-  Build-Depends:       base >=4.7 && <4.8
-  -- Hs-Source-Dirs:      
-  Default-Language:    Haskell2010
+Author:               Nicolas Trangez
+Maintainer:           ikke@nicolast.be
+Copyright:            (c) 2014, Nicolas Trangez
+License:              GPL-2
+License-File:         LICENSE
+
+Category:             Network
+Build-Type:           Simple
+Extra-Source-Files:   LICENSE
+                    , README.md
+Cabal-Version:        >=1.10
+
+Library
+  Exposed-Modules:    Network.SockMock
+                    , Network.SockMock.Policies
+  Build-Depends:      base >= 4.7 && < 4.8
+                    , mtl >= 2.1 && < 2.2
+                    , transformers >= 0.3 && < 0.4
+                    , bytestring >= 0.10 && < 0.11
+                    , text >= 1.1 && < 1.2
+                    , pipes >= 4.1 && < 4.2
+                    , pipes-safe >= 2.0 && < 2.3
+                    , pipes-network >= 0.6 && < 0.7
+                    , pipes-network-tls >= 0.2 && < 0.3
+                    , network-simple-tls >= 0.2 && < 0.3
+  Hs-Source-Dirs:     src
+  Default-Language:   Haskell2010
+  Ghc-Options:        -Wall
+
+Executable sockmock-demo
+  Main-Is:            Demo.hs
+  Build-Depends:      base >= 4.7 && < 4.8
+                    , bytestring >= 0.10 && < 0.11
+                    , pipes >= 4.1 && < 4.2
+                    , sockmock
+  Hs-Source-Dirs:     .
+  Default-Language:   Haskell2010
+  Ghc-Options:        -Wall -threaded -rtsopts
