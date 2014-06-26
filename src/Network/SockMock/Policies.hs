@@ -5,9 +5,13 @@ module Network.SockMock.Policies (
     , disconnect
     , disconnectLater
     , tcpProxy
+    , tcpProxyTimeout
     ) where
 
 import Control.Concurrent (forkIO, threadDelay)
+import Control.Concurrent.Async
+
+import Control.Monad (void)
 
 import qualified Data.Text as T
 
@@ -50,4 +54,24 @@ tcpProxy host service prod cons = do
                    , T.pack host
                    , ":"
                    , T.pack service
+                   ]
+
+tcpProxyTimeout :: HostName -> ServiceName -> Int -> Application
+tcpProxyTimeout host service timeout prod cons = do
+    logMessage msg
+    liftIO $ runSafeT $
+        connect host service (\(sock, _) -> liftIO $ do
+            t1 <- async $ runEffect $ fromSocket sock bufferSize >-> cons
+            t2 <- async $ runEffect $ prod >-> toSocket sock
+            t3 <- async $ threadDelay timeout
+            void $ waitAnyCatchCancel [t1, t2, t3])
+  where
+    bufferSize = 4096
+    msg = T.concat [ "Proxying to "
+                   , T.pack host
+                   , ":"
+                   , T.pack service
+                   , " for "
+                   , T.pack (show timeout)
+                   , "us"
                    ]
