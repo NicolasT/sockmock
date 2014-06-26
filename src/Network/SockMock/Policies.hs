@@ -3,7 +3,14 @@
 module Network.SockMock.Policies (
       blackhole
     , disconnect
+    , disconnectLater
     ) where
+
+import Control.Concurrent (threadDelay)
+
+import Control.Monad.IO.Class (liftIO)
+
+import qualified Data.Text as T
 
 import qualified Pipes.Prelude as PP
 
@@ -16,3 +23,11 @@ blackhole = do
 
 disconnect :: Application ()
 disconnect = logMessage "Disconnecting"
+
+disconnectLater :: Int -> Application ()
+disconnectLater d = do
+    logMessage $ T.append "Disconnecting after " t
+    liftIO $ threadDelay d
+    logMessage "Disconnecting"
+  where
+    t = T.append (T.pack $ show d) "us"
