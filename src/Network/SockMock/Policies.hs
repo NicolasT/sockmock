@@ -46,8 +46,9 @@ tcpProxy host service prod cons = do
     logMessage msg
     liftIO $ runSafeT $
         connect host service (\(sock, _) -> liftIO $ do
-            _ <- forkIO $ runEffect $ fromSocket sock bufferSize >-> cons
-            runEffect $ prod >-> toSocket sock)
+            t1 <- async $ runEffect $ fromSocket sock bufferSize >-> cons
+            t2 <- async $ runEffect $ prod >-> toSocket sock
+            void $ waitEitherCatchCancel t1 t2)
   where
     bufferSize = 4096
     msg = T.concat [ "Proxying to "
