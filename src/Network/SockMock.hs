@@ -1,10 +1,15 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Network.SockMock (
-      Application
+      Handler
+    , Application
     , HostPreference(..)
+    , pipeHandler
     , logMessage
     , remoteAddress
     , tcpServer
@@ -16,12 +21,18 @@ module Network.SockMock (
 
 import Control.Monad
 
+import Control.Applicative (Applicative)
+
 import Control.Concurrent (forkIO, threadDelay)
 
-import Control.Monad.Reader.Class (ask)
+import Control.Monad.Reader.Class (MonadReader)
 import Control.Monad.Trans.Reader (ReaderT(runReaderT))
 
 import Control.Exception (finally)
+
+import Control.Lens (makeLenses, view)
+
+import Data.Typeable (Typeable)
 
 import Data.ByteString (ByteString)
 
@@ -44,47 +55,56 @@ import Network.Simple.TCP.TLS (ServerSettings)
 import qualified Pipes.Network.TCP.TLS as PNT
 import qualified Pipes.Network.TCP.TLS.Safe as PNTS
 
-type ApplicationConfig = SockAddr
-type Application r = Pipe ByteString ByteString (ReaderT ApplicationConfig IO) r
+data HandlerState = HandlerState { _remoteAddress :: SockAddr }
+  deriving (Show, Eq, Typeable)
 
-data Server = TCPServer HostPreference ServiceName (Maybe Int) (Maybe Int) (Application ())
-            | TLSServer ServerSettings HostPreference ServiceName (Maybe Int) (Maybe Int) (Application ())
+makeLenses ''HandlerState
 
-buildMessage :: ApplicationConfig -> Text -> Text
-buildMessage cfg msg = T.concat [ "["
-                                , T.pack $ show cfg
-                                , "] "
-                                , msg
-                                ]
+newtype Handler r = Handler { runHandler :: ReaderT HandlerState IO r }
+  deriving (Functor, Applicative, Monad, MonadReader HandlerState, MonadIO)
 
-remoteAddress :: Application SockAddr
-remoteAddress = ask
+type Application = Producer ByteString IO () -> Consumer ByteString IO () -> Handler ()
 
-logMessage :: Text -> Application ()
+data Server = TCPServer HostPreference ServiceName (Maybe Int) (Maybe Int) Application
+            | TLSServer ServerSettings HostPreference ServiceName (Maybe Int) (Maybe Int) Application
+
+logMessage :: Text -> Handler ()
 logMessage msg = do
-    addr <- ask
-    liftIO $ T.hPutStrLn stderr $ buildMessage addr msg
+    addr <- view remoteAddress
+    liftIO $ T.hPutStrLn stderr $ buildMessage addr
+  where
+    buildMessage addr = T.concat [ "["
+                                 , T.pack $ show addr
+                                 , "] "
+                                 , msg
+                                 ]
 
 bufferSize :: Int
 bufferSize = 4096
 
-runApp :: Application ()
-       -> ApplicationConfig
-       -> Producer ByteString (ReaderT ApplicationConfig IO) ()
-       -> Consumer ByteString (ReaderT ApplicationConfig IO) ()
+pipeHandler :: Pipe ByteString ByteString IO () -> Application
+pipeHandler p = \prod cons -> liftIO $ runEffect $ prod >-> p >-> cons
+
+runApp :: Application
+       -> SockAddr
+       -> Producer ByteString IO ()
+       -> Consumer ByteString IO ()
        -> IO ()
 runApp app addr prod cons = do
-    T.hPutStrLn stderr $ buildMessage addr "Connected"
     finally
-        (flip runReaderT addr $ runEffect $ prod >-> app >-> cons)
-        (T.hPutStrLn stderr $ buildMessage addr "Disconnected")
+        (flip runReaderT state $ runHandler $ do
+            logMessage "Connected"
+            app prod cons)
+        (flip runReaderT state $ runHandler $ logMessage "Disconnected")
+  where
+    state = HandlerState { _remoteAddress = addr }
 
 runTCP :: MonadSafe m
        => HostPreference
        -> ServiceName
        -> Maybe Int
        -> Maybe Int
-       -> Application ()
+       -> Application
        -> m ()
 runTCP host service readTimeout sendTimeout app =
     PNS.serve host service $ \(sock, addr) -> do
@@ -99,7 +119,7 @@ runTLS :: (MonadSafe m, Base m ~ IO)
        -> ServiceName
        -> Maybe Int
        -> Maybe Int
-       -> Application ()
+       -> Application
        -> m ()
 runTLS config host service readTimeout sendTimeout app =
     PNTS.serve config host service $ \(ctx, addr) -> do
@@ -108,18 +128,18 @@ runTLS config host service readTimeout sendTimeout app =
 
         runApp app addr prod cons
 
-tcpServer :: ServiceName -> Application () -> Server
+tcpServer :: ServiceName -> Application -> Server
 tcpServer n = TCPServer PNS.HostAny n Nothing Nothing
 
 tcpServer' :: HostPreference
            -> ServiceName
            -> Maybe Int
            -> Maybe Int
-           -> Application ()
+           -> Application
            -> Server
 tcpServer' = TCPServer
 
-tlsServer :: ServerSettings -> ServiceName -> Application () -> Server
+tlsServer :: ServerSettings -> ServiceName -> Application -> Server
 tlsServer c n = TLSServer c PNS.HostAny n Nothing Nothing
 
 tlsServer' :: ServerSettings
@@ -127,7 +147,7 @@ tlsServer' :: ServerSettings
            -> ServiceName
            -> Maybe Int
            -> Maybe Int
-           -> Application ()
+           -> Application
            -> Server
 tlsServer' = TLSServer
 

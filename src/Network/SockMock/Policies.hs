@@ -8,24 +8,23 @@ module Network.SockMock.Policies (
 
 import Control.Concurrent (threadDelay)
 
-import Control.Monad.IO.Class (liftIO)
-
 import qualified Data.Text as T
 
+import Pipes
 import qualified Pipes.Prelude as PP
 
-import Network.SockMock (Application, logMessage)
+import Network.SockMock (Application, logMessage, pipeHandler)
 
-blackhole :: Application ()
-blackhole = do
+blackhole :: Application
+blackhole prod cons = do
     logMessage "Blackholing connection"
-    PP.drain
+    liftIO $ runEffect $ prod >-> PP.drain >-> cons
 
-disconnect :: Application ()
-disconnect = logMessage "Disconnecting"
+disconnect :: Application
+disconnect = pipeHandler (return ())
 
-disconnectLater :: Int -> Application ()
-disconnectLater d = do
+disconnectLater :: Int -> Application
+disconnectLater d _ _ = do
     logMessage msg
     liftIO $ threadDelay d
     logMessage "Disconnecting"

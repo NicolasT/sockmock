@@ -24,6 +24,7 @@ Library
                     , transformers >= 0.3 && < 0.4
                     , bytestring >= 0.10 && < 0.11
                     , text >= 1.1 && < 1.2
+                    , lens >= 4.2 && < 4.3
                     , pipes >= 4.1 && < 4.2
                     , pipes-safe >= 2.0 && < 2.3
                     , pipes-network >= 0.6 && < 0.7
@@ -37,6 +38,7 @@ Executable sockmock-demo
   Main-Is:            Demo.hs
   Build-Depends:      base >= 4.7 && < 4.8
                     , bytestring >= 0.10 && < 0.11
+                    , lens >= 4.2 && < 4.3
                     , pipes >= 4.1 && < 4.2
                     , sockmock
   Hs-Source-Dirs:     .

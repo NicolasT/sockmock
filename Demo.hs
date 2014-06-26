@@ -4,18 +4,22 @@ module Main (main) where
 
 import qualified Data.ByteString.Char8 as BS8
 
+import Control.Lens (view)
+
 import Pipes
 
 import Network.SockMock (Application, remoteAddress, run, tcpServer)
 import Network.SockMock.Policies (blackhole, disconnect, disconnectLater)
 
-sayHello :: Application ()
-sayHello = do
-    addr <- remoteAddress
-    yield $ BS8.concat [ "Hello, "
-                       , BS8.pack $ show addr
-                       , "\n"
-                       ]
+sayHello :: Application
+sayHello _ cons = do
+    addr <- view remoteAddress
+    liftIO $ runEffect $ yield (message addr) >-> cons
+  where
+    message addr = BS8.concat [ "Hello, "
+                              , BS8.pack $ show addr
+                              , "\n"
+                              ]
 
 main :: IO ()
 main = run servers
