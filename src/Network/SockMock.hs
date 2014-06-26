@@ -8,7 +8,9 @@ module Network.SockMock (
     , logMessage
     , remoteAddress
     , tcpServer
+    , tcpServer'
     , tlsServer
+    , tlsServer'
     , run
     ) where
 
@@ -109,8 +111,25 @@ runTLS config host service readTimeout sendTimeout app =
 tcpServer :: ServiceName -> Application () -> Server
 tcpServer n = TCPServer PNS.HostAny n Nothing Nothing
 
+tcpServer' :: HostPreference
+           -> ServiceName
+           -> Maybe Int
+           -> Maybe Int
+           -> Application ()
+           -> Server
+tcpServer' = TCPServer
+
 tlsServer :: ServerSettings -> ServiceName -> Application () -> Server
 tlsServer c n = TLSServer c PNS.HostAny n Nothing Nothing
+
+tlsServer' :: ServerSettings
+           -> HostPreference
+           -> ServiceName
+           -> Maybe Int
+           -> Maybe Int
+           -> Application ()
+           -> Server
+tlsServer' = TLSServer
 
 run :: [Server] -> IO ()
 run servers = do
