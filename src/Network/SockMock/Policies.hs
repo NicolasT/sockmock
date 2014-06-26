@@ -26,8 +26,11 @@ disconnect = logMessage "Disconnecting"
 
 disconnectLater :: Int -> Application ()
 disconnectLater d = do
-    logMessage $ T.append "Disconnecting after " t
+    logMessage msg
     liftIO $ threadDelay d
     logMessage "Disconnecting"
   where
-    t = T.append (T.pack $ show d) "us"
+    msg = T.concat [ "Disconnecting after "
+                   , T.pack $ show d
+                   , "us"
+                   ]
