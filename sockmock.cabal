@@ -33,7 +33,7 @@ Library
                     , network-simple-tls >= 0.2 && < 0.3
   Hs-Source-Dirs:     src
   Default-Language:   Haskell2010
-  Ghc-Options:        -O2 -Wall
+  Ghc-Options:        -O2 -Wall -funbox-strict-fields
 
 Executable sockmock-demo
   Main-Is:            Demo.hs

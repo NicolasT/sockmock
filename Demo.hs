@@ -22,7 +22,7 @@ sayHello _ cons = do
                               ]
 
 main :: IO ()
-main = run servers
+main = run False servers
   where
     servers = [ tcpServer "8080" disconnect
               , tcpServer "8081" blackhole
