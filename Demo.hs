@@ -30,4 +30,5 @@ main = run servers
               , tcpServer "8083" (disconnectLater 1000000)
               , tcpServer "8084" (tcpProxy "127.0.0.1" "8082")
               , tcpServer "8085" (tcpProxyTimeout "127.0.0.1" "8081" 5000000)
+              , tcpServer "8086" echo
               ]

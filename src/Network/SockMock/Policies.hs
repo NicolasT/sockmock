@@ -4,6 +4,7 @@ module Network.SockMock.Policies (
       blackhole
     , disconnect
     , disconnectLater
+    , echo
     , tcpProxy
     , tcpProxyTimeout
     ) where
@@ -40,6 +41,9 @@ disconnectLater d _ _ = do
                    , T.pack $ show d
                    , "us"
                    ]
+
+echo :: Application
+echo = pipeHandler cat
 
 tcpProxy :: HostName -> ServiceName -> Application
 tcpProxy host service prod cons = do
