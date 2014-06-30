@@ -9,7 +9,7 @@ module Network.SockMock.Policies (
     , tcpProxyTimeout
     ) where
 
-import Control.Concurrent (forkIO, threadDelay)
+import Control.Concurrent (threadDelay)
 import Control.Concurrent.Async
 
 import Control.Monad (void)
