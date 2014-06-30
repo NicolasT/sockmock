@@ -33,7 +33,7 @@ Library
                     , network-simple-tls >= 0.2 && < 0.3
   Hs-Source-Dirs:     src
   Default-Language:   Haskell2010
-  Ghc-Options:        -Wall
+  Ghc-Options:        -O2 -Wall
 
 Executable sockmock-demo
   Main-Is:            Demo.hs
@@ -44,4 +44,4 @@ Executable sockmock-demo
                     , sockmock
   Hs-Source-Dirs:     .
   Default-Language:   Haskell2010
-  Ghc-Options:        -Wall -threaded -rtsopts
+  Ghc-Options:        -O2 -Wall -threaded -rtsopts
