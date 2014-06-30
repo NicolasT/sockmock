@@ -19,6 +19,7 @@ Cabal-Version:        >=1.10
 Library
   Exposed-Modules:    Network.SockMock
                     , Network.SockMock.Policies
+                    , Network.SockMock.HTTP
   Build-Depends:      base >= 4.7 && < 4.8
                     , mtl >= 2.1 && < 2.2
                     , transformers >= 0.3 && < 0.4
@@ -28,9 +29,13 @@ Library
                     , async >= 2.0 && < 2.1
                     , pipes >= 4.1 && < 4.2
                     , pipes-safe >= 2.0 && < 2.3
+                    , pipes-parse >= 3.0 && < 3.1
+                    , pipes-attoparsec >= 0.5 && < 0.6
+                    , pipes-bytestring >= 2.1 && < 2.2
                     , pipes-network >= 0.6 && < 0.7
                     , pipes-network-tls >= 0.2 && < 0.3
                     , network-simple-tls >= 0.2 && < 0.3
+                    , hweblib >= 0.6 && < 0.7
   Hs-Source-Dirs:     src
   Default-Language:   Haskell2010
   Ghc-Options:        -O2 -Wall -funbox-strict-fields

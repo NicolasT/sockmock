@@ -10,6 +10,7 @@ import Pipes
 
 import Network.SockMock (Application, remoteAddress, run, tcpServer)
 import Network.SockMock.Policies
+import Network.SockMock.HTTP (HTTPApplication, Response(..), http, http10)
 
 sayHello :: Application
 sayHello _ cons = do
@@ -21,6 +22,20 @@ sayHello _ cons = do
                               , "\n"
                               ]
 
+httpApp :: HTTPApplication
+httpApp _req = return (response, yield msg)
+  where
+    msg = "Hello, world!"
+    len = BS8.length msg
+    headers = [ ("Content-Length", BS8.pack $ show len)
+              , ("Content-Type", "text/plain")
+              ]
+    response = Response { rpCode = 200
+                        , rpHeaders = headers
+                        , rpVersion = http10
+                        , rpMessage = "OK"
+                        }
+
 main :: IO ()
 main = run False servers
   where
@@ -31,4 +46,5 @@ main = run False servers
               , tcpServer "8084" (tcpProxy "127.0.0.1" "8082")
               , tcpServer "8085" (tcpProxyTimeout "127.0.0.1" "8081" 5000000)
               , tcpServer "8086" echo
+              , tcpServer "8087" (http httpApp)
               ]
